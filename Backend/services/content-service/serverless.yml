@@ -1,0 +1,70 @@
+service: vidya-content-service
+
+frameworkVersion: '2'
+projectDir: ../../
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: '20201221'
+  stage: ${opt:stage, 'dev'}
+  environment: ${file(../../configs/environments/${opt:stage, 'dev'}.yml)}
+  vpc:
+    securityGroupIds: ${file(../../configs/vpc/${opt:stage, 'dev'}.yml):SECURITY_GROUP_IDS}
+    subnetIds: ${file(../../configs/vpc/${opt:stage, 'dev'}.yml):SUBNET_IDS}
+
+iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'secretsmanager:GetSecretValue'
+      Resource: 'arn:aws:secretsmanager:*'
+    - Effect: 'Allow'
+      Action:
+        - 'ssm:DescribeParameters'
+      Resource: 'arn:aws:ssm:::*'
+    - Effect: 'Allow'
+      Action:
+        - 'events:PutEvents'
+      Resource:
+        - 'arn:aws:events:us-east-1:*:event-bus/default'
+    - Effect: 'Allow'
+      Action:
+        - 'ssm:GetParameter'
+      Resource: 'arn:aws:ssm:::parameter/Pharma/*'
+    - Effect: 'Allow'
+      Action:
+        - 'kms:Decrypt'
+      Resource: 'arn:aws:kms:::key/alias/aws/ssm'
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: '*'
+
+plugins:
+  - serverless-bundle
+  - serverless-offline
+
+custom:
+  postgres: ${ssm:/aws/reference/secretsmanager/ProductionDbCredentials~true}
+  bundle:
+    ignorePackages:
+      - pg-native
+    forceInclude:
+      - knex
+      - pg
+      - mssql
+
+functions:
+  saveVideo:
+    handler: functions/saveVideo.default
+    events:
+      - http:
+          path: /video
+          method: POST
+  getFeed:
+    handler: functions/getFeed.default
+    events:
+      - http:
+          path: /feed
+          method: GET
+

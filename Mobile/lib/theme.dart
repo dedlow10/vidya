@@ -14,3 +14,23 @@ const AppBackgroundColor = PrimaryColor;
 const AppBarColor = BlackShade;
 const ButtonBackgroundColor = LinkColor;
 const ButtonTextCOlor = TextIconColor;
+
+getTextField(hint, controller) {
+  return TextField(
+      style: TextStyle(color: Colors.white),
+      controller: controller,
+      decoration: getTextFieldDecoration(hint));
+}
+
+getTextFieldDecoration(hint) {
+  return InputDecoration(
+    fillColor: Colors.white12,
+    filled: true,
+    enabledBorder: const OutlineInputBorder(
+      // width: 0.0 produces a thin "hairline" border
+      borderSide: const BorderSide(color: Colors.white, width: 0.0),
+    ),
+    hintStyle: TextStyle(color: Colors.white),
+    hintText: hint,
+  );
+}

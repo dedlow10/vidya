@@ -1,9 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vidya_mobile/api/services/video_service.dart';
 import '../theme.dart';
-import 'package:video_trimmer/video_trimmer.dart';
-import '../widgets/video_widget.dart';
+import 'package:video_trimmer/video_trimmer.dart'
+    show TrimEditor, Trimmer, VideoViewer;
+import '../api/services/s3_service.dart';
+import 'package:uuid/uuid.dart';
 
 class UploadScreen extends StatefulWidget {
   UploadScreen() : super();
@@ -19,11 +23,14 @@ class _UploadScreenState extends State<UploadScreen> {
   double _endValue = 0.0;
 
   File _video;
-  String _newFilePath;
 
   bool _isPlaying;
   bool isVideoUploadSuccess = false;
   bool isVideoLoaded = false;
+  bool isUploading = false;
+
+  TextEditingController titleController = new TextEditingController();
+  TextEditingController gameNameController = new TextEditingController();
 
   Future getVideo() async {
     final picker = ImagePicker();
@@ -40,8 +47,9 @@ class _UploadScreenState extends State<UploadScreen> {
 
   getTrimmer() {
     if (!isVideoLoaded) {
-      _trimmer.loadVideo(videoFile: _video);
-
+      _trimmer
+          .loadVideo(videoFile: _video)
+          .then((value) => {_trimmer.videoPlayerController.play()});
       isVideoLoaded = true;
     }
 
@@ -51,9 +59,11 @@ class _UploadScreenState extends State<UploadScreen> {
       viewerWidth: MediaQuery.of(context).size.width,
       maxVideoLength: Duration(seconds: 30),
       onChangeStart: (value) {
+        print('moving');
         _startValue = value;
       },
       onChangeEnd: (value) {
+        print('ending');
         _endValue = value;
       },
       onChangePlaybackState: (value) {
@@ -62,6 +72,30 @@ class _UploadScreenState extends State<UploadScreen> {
         });
       },
     );
+  }
+
+  onSubmit() async {
+    var videoId = Uuid().v4();
+    var headline = titleController.text;
+    var game = gameNameController.text;
+
+    setState(() {
+      isUploading = true;
+    });
+
+    await _trimmer
+        .saveTrimmedVideo(startValue: _startValue, endValue: _endValue)
+        .then((value) async {
+      await createAndUploadFile(new File(value), videoId);
+      await saveVideo(headline, videoId, game);
+
+      setState(() {
+        isVideoUploadSuccess = true;
+        isUploading = false;
+        titleController.text = "";
+        gameNameController.text = "";
+      });
+    });
   }
 
   getSubmitButton() {
@@ -77,16 +111,7 @@ class _UploadScreenState extends State<UploadScreen> {
           color: Colors.white,
         ),
       ),
-      onPressed: () {
-        _trimmer
-            .saveTrimmedVideo(startValue: _startValue, endValue: _endValue)
-            .then((value) {
-          setState(() {
-            _newFilePath = value;
-          });
-          isVideoUploadSuccess = true;
-        });
-      },
+      onPressed: onSubmit,
       splashColor: PrimaryColor,
     );
   }
@@ -113,6 +138,14 @@ class _UploadScreenState extends State<UploadScreen> {
     if (_video != null) {
       return Container(
           child: Column(children: [
+        Padding(
+            padding: EdgeInsets.fromLTRB(10, 80, 10, 10),
+            child: getTextField('Title - Add a title that describes your video',
+                titleController)),
+        Padding(
+            padding: EdgeInsets.all(10.0),
+            child: getTextField(
+                'Game - Name of the game in the video', gameNameController)),
         Expanded(child: VideoViewer(trimmer: _trimmer)),
         Padding(padding: EdgeInsets.all(10.0), child: getTrimmer()),
         Padding(padding: EdgeInsets.all(10.0), child: getSubmitButton())
@@ -151,7 +184,9 @@ class _UploadScreenState extends State<UploadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isVideoUploadSuccess) {
+    if (isUploading) {
+      return Container(child: Center(child: Text('Uploading...')));
+    } else if (isVideoUploadSuccess) {
       return Container(
           child: Center(
         child: getShareAnotherButton(),

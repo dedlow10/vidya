@@ -84,8 +84,45 @@ toPage(videos) {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Future<PageView> downloadData() async {
+    var _pages = toPage(await getVideos());
+    return PageView(
+        scrollDirection: Axis.vertical,
+        children: _pages,
+        onPageChanged: (int page) {
+          // this page variable is the new page and will change before the pageController fully reaches the full, rounded int value
+          /* if (page == (_pages.length - 1)) {
+            _pages.addAll(toPage(getVideosByUser(null)));
+          }*/
+        },
+        controller: PageController(
+          initialPage: 0,
+        ));
+  }
+
+  initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+        body: FutureBuilder<PageView>(
+            future: downloadData(),
+            builder: (BuildContext context, AsyncSnapshot<PageView> snapshot) {
+              // AsyncSnapshot<Your object type>
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: Text('Please wait its loading...'));
+              } else {
+                if (snapshot.hasError)
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                else
+                  return snapshot.data;
+              }
+            }));
+  }
+
+/*      
     final List<Widget> _pages = toPage(getVideosByUser(null));
     return PageView(
       scrollDirection: Axis.vertical,
@@ -99,6 +136,6 @@ class _HomeScreenState extends State<HomeScreen> {
       controller: PageController(
         initialPage: 0,
       ),
-    );
-  }
+    );*/
+
 }

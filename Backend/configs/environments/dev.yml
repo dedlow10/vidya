@@ -1,0 +1,7 @@
+STAGE: ${self:provider.stage}
+REGION: ${self:provider.region}
+DATABASE_USER: ${self:custom.postgres.username}
+DATABASE_PASS: ${self:custom.postgres.password}
+DATABASE_HOST: ${self:custom.postgres.host}
+DATABASE_NAME: ${self:custom.postgres.dbName}
+BUCKET_NAME: vidya-dev152036-dev

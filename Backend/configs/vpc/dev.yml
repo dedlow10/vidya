@@ -1,0 +1,5 @@
+SECURITY_GROUP_IDS:
+  - sg-0dc43899b73c32d4a
+SUBNET_IDS:
+  - subnet-c89e10e6
+  - subnet-e54b0eea

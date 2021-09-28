@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-vidya-dev-210750-authRole",
+      "UnauthRoleArn": "arn:aws:iam::478373966066:role/amplify-vidya-dev-210750-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::478373966066:role/amplify-vidya-dev-210750-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-vidya-dev-210750-deployment",
+      "UnauthRoleName": "amplify-vidya-dev-210750-unauthRole",
+      "StackName": "amplify-vidya-dev-210750",
+      "StackId": "arn:aws:cloudformation:us-east-1:478373966066:stack/amplify-vidya-dev-210750/2dd78800-1e66-11ec-a3cf-0a5523f9f53d",
+      "AmplifyAppId": "d5bf28vmn7q9e"
+    },
+    "categories": {
+      "auth": {
+        "vidyab25c60d8": {}
+      }
+    }
+  }
+}
